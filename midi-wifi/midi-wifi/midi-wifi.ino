@@ -196,13 +196,14 @@ void handleNote(const midi::midi_midi_event &midi) {
     case kCowbellKey:
       digitalWrite(kHorizontalPositionPin, HIGH);
       digitalWrite(kVerticalDirectionStick1Pin, LOW);
-      digitalWrite(kVerticalPlayingStick1Pin, HIGH)
-        is_cowbell_playing = true;
+      digitalWrite(kVerticalPlayingStick1Pin, HIGH);
+      is_cowbell_playing = true;
       break;
   }
 }
 
 void updateInstruments() {
+  Serial.printf("%d %d %d %d %d %d\n", is_snare_drum_playing, is_bass_drum_playing, is_pedal_hihat_playing, is_open_hihat_playing, is_closed_hihat_playing, is_cowbell_playing);
   if (is_snare_drum_playing) {
     digitalWrite(kVerticalPlayingStick2Pin, LOW);  // Play Off.
     is_snare_drum_playing = false;
@@ -212,7 +213,7 @@ void updateInstruments() {
     is_bass_drum_playing = false;
   }
   if (is_pedal_hihat_playing) {
-    digitalWrite(kPlayHihatPedalPin, HIGH);  // Pedal down
+    digitalWrite(kPlayHiHatPedalPin, HIGH);  // Pedal down
     is_pedal_hihat_playing = false;
   }
   if (is_open_hihat_playing) {
