@@ -13,7 +13,6 @@
 // const char *ssid = "RedRover";
 
 const char *ssid = "MarcosEizayaga";
-// const char *password = "A52AB1F101582F29EC52CF273FC1CE5459FFD9369B256DB8FCE54FB8B0AB7663";
 const char *password = "001037060";
 
 // const char *ssid = "Collegetown_Resident";
@@ -103,7 +102,6 @@ void setup() {
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
-  // WiFi.begin(ssid);
 
   Serial.print("\nYour MAC Adress: ");
   Serial.println(WiFi.macAddress());
@@ -160,73 +158,76 @@ const char *getReadableParamName(const int param) {
   return "";
 }
 
-bool note_played = false;
+bool is_snare_drum_playing = false;
+bool is_bass_drum_playing = false;
 
-int kVerticalDirectionStick1Pin_value = 0;
-int kVerticalPlayingStick1Pin_value = 0;
-int kPlayBassPedalPin_value = 0;
+bool is_pedal_hihat_playing = false;
+
+bool is_open_hihat_playing = false;
+bool is_closed_hihat_playing = false;
+bool is_cowbell_playing = false;
 
 void handleNote(const midi::midi_midi_event &midi) {
   switch (midi.param1) {
     case kSnareDrumKey:
-      digitalWrite(kVerticalDirectionStick1Pin, LOW);  // Stick move down.
-      kVerticalDirectionStick1Pin_value = 0;
-      digitalWrite(kVerticalPlayingStick1Pin, HIGH);  // Play On.
-      kVerticalPlayingStick1Pin_value = 1;
-      note_played = true;
+      digitalWrite(kVerticalDirectionStick2Pin, LOW);  // Stick move down.
+      digitalWrite(kVerticalPlayingStick2Pin, HIGH);   // Play On.
+      is_snare_drum_playing = true;
       break;
     case kBassDrumKey:
       digitalWrite(kPlayBassPedalPin, HIGH);  // Play On.
-      kPlayBassPedalPin_value = 1;
-      note_played = true;
+      is_bass_drum_playing = true;
       break;
     case kHiHatPedalKey:
-      // Unimplemented
-      break;
-    case kHiHatClosedKey:
-      // Unimplemented
+      digitalWrite(kPlayBassPedalPin, LOW);
+      is_pedal_hihat_playing = true;
       break;
     case kHiHatOpenKey:
-      // Unimplemented
+      digitalWrite(kPlayHiHatPedalPin, LOW);            // Pedal release.
+      digitalWrite(kVerticalDirectionStick1Pin, HIGH);  // Stick move up.
+      digitalWrite(kVerticalPlayingStick1Pin, HIGH);    // Stick move up.
+      is_open_hihat_playing = true;
+      break;
+    case kHiHatClosedKey:
+      digitalWrite(kVerticalDirectionStick1Pin, HIGH);  // Stick move up.
+      digitalWrite(kVerticalPlayingStick1Pin, HIGH);    // Stick move up.
+      is_closed_hihat_playing = true;
       break;
     case kCowbellKey:
-      // Unimplemented
+      digitalWrite(kHorizontalPositionPin, HIGH);
+      digitalWrite(kVerticalDirectionStick1Pin, LOW);
+      digitalWrite(kVerticalPlayingStick1Pin, HIGH)
+        is_cowbell_playing = true;
       break;
   }
 }
 
 void updateInstruments() {
-  if (kVerticalDirectionStick1Pin_value != 0 || kVerticalPlayingStick1Pin_value != 0 || kPlayBassPedalPin_value != 0) {
-    Serial.printf("%d%d%d\n", kVerticalDirectionStick1Pin_value, kVerticalPlayingStick1Pin_value, kPlayBassPedalPin_value);
+  if (is_snare_drum_playing) {
+    digitalWrite(kVerticalPlayingStick2Pin, LOW);  // Play Off.
+    is_snare_drum_playing = false;
   }
-
-  if (note_played) {
-    // Reset state.
-    switch (cur_state.midi.param1) {
-      case kSnareDrumKey:
-        digitalWrite(kVerticalDirectionStick1Pin, LOW);  // Stick move down.
-        digitalWrite(kVerticalPlayingStick1Pin, LOW);    // Play On.
-        kVerticalDirectionStick1Pin_value = 0;
-        kVerticalPlayingStick1Pin_value = 0;
-        break;
-      case kBassDrumKey:
-        digitalWrite(kPlayBassPedalPin, LOW);  // Play On.
-        kPlayBassPedalPin_value = 0;
-        break;
-      case kHiHatPedalKey:
-        // Unimplemented
-        break;
-      case kHiHatClosedKey:
-        // Unimplemented
-        break;
-      case kHiHatOpenKey:
-        // Unimplemented
-        break;
-      case kCowbellKey:
-        // Unimplemented
-        break;
-    }
-    note_played = false;
+  if (is_bass_drum_playing) {
+    digitalWrite(kPlayBassPedalPin, LOW);  // Pedal up
+    is_bass_drum_playing = false;
+  }
+  if (is_pedal_hihat_playing) {
+    digitalWrite(kPlayHihatPedalPin, HIGH);  // Pedal down
+    is_pedal_hihat_playing = false;
+  }
+  if (is_open_hihat_playing) {
+    digitalWrite(kVerticalPlayingStick2Pin, LOW);  // Play Off.
+    is_open_hihat_playing = false;
+  }
+  if (is_closed_hihat_playing) {
+    digitalWrite(kPlayHiHatPedalPin, HIGH);           // Pedal down.
+    digitalWrite(kVerticalDirectionStick1Pin, HIGH);  // Stick move up.
+    digitalWrite(kVerticalPlayingStick1Pin, HIGH);    // Stick move up.
+    is_closed_hihat_playing = false;
+  }
+  if (is_cowbell_playing) {
+    digitalWrite(kVerticalPlayingStick1Pin, HIGH);
+    is_cowbell_playing = false;
   }
 }
 
@@ -255,10 +256,6 @@ void loop() {
 
     if (cur_state.status == midi::MIDI_PARSER_TRACK_MIDI) {
       int64_t time_in_ms = cur_state.timeInMs();
-      Serial.printf("time: %ld - %ld", (long)cur_state.timeInTicks(), (long)time_in_ms);
-      Serial.printf("\tnote: %s [%s]\n", getReadableParamName(cur_state.midi.param1),
-                    parser.midi_status_name(cur_state.midi.status));
-
       bool status_on = cur_state.midi.status == midi::MIDI_STATUS_NOTE_ON;
       bool status_off = cur_state.midi.status == midi::MIDI_STATUS_NOTE_OFF;
 
