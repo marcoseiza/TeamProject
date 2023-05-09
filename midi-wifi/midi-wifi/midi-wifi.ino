@@ -10,6 +10,9 @@
 // - https://github.com/pschatzmann/arduino-midi-fileparser
 #include <MidiFileParser.h>
 
+#define RXp2 16
+#define TXp2 17
+
 // const char *ssid = "RedRover";
 
 const char *ssid = "MarcosEizayaga";
@@ -91,6 +94,7 @@ void setup() {
   pinMode(kPlayHiHatPedalPin, OUTPUT);
 
   Serial.begin(9600);
+  Serial2.begin(115200, SERIAL_8N1, RXp2, TXp2);  
 
   Serial.println("\n\nMounting SPIFFS ...");
   if (!SPIFFS.begin(true)) {
@@ -233,6 +237,10 @@ void updateInstruments() {
 }
 
 void loop() {
+  Serial2.println(1);
+  Serial.println("Sent Packet: 1");
+  delay(5000);
+
   if (!done_upload) { return; }
 
   fs::File file = SPIFFS.open("/" + uploaded_midi_filename, "r");

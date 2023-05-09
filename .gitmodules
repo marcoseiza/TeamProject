@@ -1,0 +1,3 @@
+[submodule "serialmidi"]
+	path = serialmidi
+	url = https://github.com/raspy135/serialmidi.git
