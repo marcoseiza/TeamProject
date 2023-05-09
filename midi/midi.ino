@@ -45,10 +45,10 @@ const int kLeftStickStartAngle = 85;
 const int kLeftStickHitDiff = 13;
 const int kLeftStickHitAngle = kLeftStickStartAngle + kLeftStickHitDiff;
 const int kRightBaseSnareAngle = 160;
-const int kRightBaseCowbellAngle = 145;
+const int kRightBaseCowbellAngle = 135;
 const int kRightStickCowbellStartAngle = 120;
 const int kRightStickCowbellHitDiff = -15;
-const int kRightStickCowbellHitAngle = kRightStickCowbellStartAngle - kRightStickCowbellHitDiff;
+const int kRightStickCowbellHitAngle = kRightStickCowbellStartAngle + kRightStickCowbellHitDiff;
 
 #define NUM_LEDS 64
 #define LEDS_DATA_PIN 4
@@ -60,7 +60,6 @@ bool show_led = false;
 CRGB leds[NUM_LEDS];
 
 void handleNoteOn(uint8_t ch, uint8_t note, uint8_t vel) {
-  Serial.println(note);
   show_led = true;
   switch (note) {
     case kBassDrumNote:
@@ -107,17 +106,13 @@ void handleNoteOff(uint8_t ch, uint8_t note, uint8_t vel) {
 }
 
 void handleStickOn() {
-  // right_stick.write(kRightStickHitAngle);
+  right_stick.write(kRightStickHitAngle);
   // left_stick.write(kLeftStickHitAngle);
-  right_base.write(kRightBaseCowbellAngle);
-  right_stick.write(kRightStickCowbellStartAngle);
 }
 
 void handleStickOff() {
-  // right_stick.write(kRightStickStartAngle);
+  right_stick.write(kRightStickStartAngle);
   // left_stick.write(kLeftStickStartAngle);
-  right_base.write(kRightBaseSnareAngle);
-  right_stick.write(kRightStickCowbellHitAngle);
 }
 
 void changeBassDrumState(bool play) {
@@ -181,8 +176,8 @@ void loop() {
   }
 
   shaker.update();
-  right_stick.update();
   left_stick.update();
+right_stick.update();
   right_base.update();
 
   if (bass_drum_timer.done()) {

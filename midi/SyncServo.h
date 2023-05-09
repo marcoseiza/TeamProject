@@ -49,9 +49,11 @@ public:
 
     _servo.write(_current_angle);
 
-    if (abs(_current_angle - _target_angle) < _diff)
+    if (abs(_current_angle - _target_angle) < _diff) {
+      _current_angle = _target_angle;
+      _servo.write(_target_angle);
       return true;
-
+    }
     return false;
   }
 
